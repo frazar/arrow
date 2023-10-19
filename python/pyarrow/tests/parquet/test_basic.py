@@ -882,3 +882,40 @@ def test_thrift_size_limits(tempdir):
     assert got == table
     got = pq.read_table(path)
     assert got == table
+
+
+def test_page_checksum_verification(tempdir):
+    # Write some sample data into a parquet file with page checksum enabled
+    original_path = tempdir / 'correct.parquet'
+    table_orig = pa.table({'a': [1, 2, 3, 4]})
+    pq.write_table(table_orig, original_path, page_checksum_enabled=True)
+
+    # Read file and verify that the data is correct
+    table_check = pq.read_table(original_path, page_checksum_verification=True)
+    assert table_orig == table_check
+
+    # Read the original file as binary and swap the 31-th and 36-th bytes. This should be
+    # equivalent to storing the following data:
+    #    pa.table({'a': [1, 3, 2, 4]})
+    bin_data = bytearray(original_path.read_bytes())
+
+    # Swap two bytes to emulate corruption. Also, check that the two bytes are different,
+    # otherwise no corruption occurs
+    assert bin_data[31] != bin_data[36]
+    bin_data[31], bin_data[36] = bin_data[36], bin_data[31]
+
+    # Write the corrupted data to another parquet file
+    corrupted_path = tempdir / 'corrupted.parquet'
+    corrupted_path.write_bytes(bin_data)
+
+    # Check that reading the corrupted file without page checksum verification succeeds
+    table_corrupt = pq.read_table(corrupted_path, page_checksum_verification=False)
+    # The read should complete without error, but the table has different
+    # content than the original file!
+    assert table_corrupt != table_orig
+    assert table_corrupt == pa.table({'a': [1, 3, 2, 4]})
+
+    # Read the corrupted file again, but with page checksum verification. This
+    # should raise an exception.
+    with pytest.raises(OSError, match="CRC checksum verification"):
+        _ = pq.read_table(corrupted_path, page_checksum_verification=True)
