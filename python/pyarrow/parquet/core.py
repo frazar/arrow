@@ -3060,6 +3060,7 @@ def read_table(source, *, columns=None, use_threads=True, metadata=None,
                 partitioning=partitioning,
                 coerce_int96_timestamp_unit=coerce_int96_timestamp_unit,
                 use_legacy_dataset=True,
+                page_checksum_verification=page_checksum_verification,
             )
     else:
         pf = ParquetFile(
@@ -3068,7 +3069,8 @@ def read_table(source, *, columns=None, use_threads=True, metadata=None,
             memory_map=memory_map,
             buffer_size=buffer_size,
             coerce_int96_timestamp_unit=coerce_int96_timestamp_unit,
-            decryption_properties=decryption_properties
+            decryption_properties=decryption_properties,
+            page_checksum_verification=page_checksum_verification,
         )
     return pf.read(columns=columns, use_threads=use_threads,
                    use_pandas_metadata=use_pandas_metadata)
