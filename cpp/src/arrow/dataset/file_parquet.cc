@@ -23,6 +23,7 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
+#include <iostream>
 
 #include "arrow/compute/exec.h"
 #include "arrow/dataset/dataset_internal.h"
