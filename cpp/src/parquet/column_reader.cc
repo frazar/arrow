@@ -491,11 +491,21 @@ std::shared_ptr<Page> SerializedPageReader::NextPage() {
 
     const PageType::type page_type = LoadEnumSafe(&current_page_header_.type);
 
+    std::cout << "current page type is: " << static_cast<int>(page_type) << std::boolalpha
+            << ", isset crc is: " << current_page_header_.__isset.crc << std::endl;
+
+    bool tmp = properties_.page_checksum_verification();
+    std::cout << "properties_.page_checksum_verification(): " << tmp << std::endl;
+    std::cout << "current_page_header_.__isset.crc: " << current_page_header_.__isset.crc << std::endl;
+    std::cout << "PageCanUseChecksum(page_type): " << PageCanUseChecksum(page_type) << std::endl;
+
     if (properties_.page_checksum_verification() && current_page_header_.__isset.crc &&
         PageCanUseChecksum(page_type)) {
       // verify crc
       uint32_t checksum =
           ::arrow::internal::crc32(/* prev */ 0, page_buffer->data(), compressed_len);
+      std::cout << "crc is: " << checksum << ", storing: " << current_page_header_.crc
+                << std::endl;
       if (static_cast<int32_t>(checksum) != current_page_header_.crc) {
         throw ParquetException(
             "could not verify page integrity, CRC checksum verification failed for "

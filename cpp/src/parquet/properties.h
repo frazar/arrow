@@ -22,6 +22,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
+#include <iostream>
 
 #include "arrow/io/caching.h"
 #include "arrow/type.h"
@@ -115,9 +116,15 @@ class PARQUET_EXPORT ReaderProperties {
     return file_decryption_properties_;
   }
 
-  bool page_checksum_verification() const { return page_checksum_verification_; }
-  void set_page_checksum_verification(bool check_crc) {
+  bool page_checksum_verification() const {
+    std::cout << "page_checksum_verification() called, returning: " << page_checksum_verification_ << std::endl;
+    return page_checksum_verification_;
+
+  }
+  void __attribute__ ((noinline)) set_page_checksum_verification(bool check_crc) {
+    std::cout << "set_page_checksum_verification() called with: check_crc=" << check_crc << std::endl;
     page_checksum_verification_ = check_crc;
+    std::cout << "page_checksum_verification_ is now: " << page_checksum_verification_ << std::endl;
   }
 
  private:
